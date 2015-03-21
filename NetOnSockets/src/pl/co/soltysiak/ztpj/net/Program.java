@@ -1,4 +1,4 @@
-package pl.co.soltysiak.ztpj.jdbc;
+package pl.co.soltysiak.ztpj.net;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -12,7 +12,9 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.ParseException;
 
-import pl.co.soltysiak.ztpj.jdbc.model.Employee;
+import pl.co.soltysiak.ztpj.net.connectivity.Client;
+import pl.co.soltysiak.ztpj.net.connectivity.Server;
+import pl.co.soltysiak.ztpj.net.model.Employee;
 
 public class Program {
 
@@ -23,6 +25,8 @@ public class Program {
 	private String deleteSingleEmployeeQuery = "DELETE FROM Employee WHERE Id=(?)";
 	private String getSingleEmployeeQuery = "select *  from Employee where id = (?)";
 	private String insertEmployeeQuery = "insert into Employee ( FirstName, LastName, Salary, Position, Phone, CreditCard, CostLimit ) values ( ?, ?, ?, ?, ?, ?, ? )";
+	private Server serverInstance = null;
+	private Client clientInstance = null;
 
 	public static void main(String[] args) throws Exception {
 		(new Program()).start();
@@ -42,6 +46,13 @@ public class Program {
 					insertEmployee();
 				} else if (menuChoice == 3) {
 					deleteEmployee();
+				} else if (menuChoice == 4) {
+					clientInstance = new Client("127.0.0.1");
+					clientInstance.GetEmployeeData();
+					
+				} else if (menuChoice == 5) {
+					serverInstance = new Server();
+					serverInstance.startServer();
 				} else if (menuChoice == 0) {
 					System.out.println("Goodbye!");
 				}
@@ -66,7 +77,7 @@ public class Program {
 
 	private void deleteEmployee() throws Exception {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		int employeeIdDelete =-1;
+		int employeeIdDelete = -1;
 		String line = "";
 		boolean badInput = false;
 		do {
@@ -74,28 +85,26 @@ public class Program {
 			badInput = false;
 
 			line = br.readLine();
-			
-			try{
-				employeeIdDelete = Integer.parseInt(line);	
-			}
-			catch(NumberFormatException ex){
+
+			try {
+				employeeIdDelete = Integer.parseInt(line);
+			} catch (NumberFormatException ex) {
 				badInput = true;
 			}
-			
+
 		} while (badInput);
-		
-		
+
 		PreparedStatement singleEmployeeStatement = (PreparedStatement) conn
 				.prepareStatement(getSingleEmployeeQuery);
-		
+
 		singleEmployeeStatement.setInt(1, employeeIdDelete);
 		ResultSet rs = singleEmployeeStatement.executeQuery();
-		
+
 		while (rs.next()) {
 			Employee employee = new Employee(rs);
 			System.out.println(employee.toString());
 		}
-		
+
 		System.out.print("[Enter] - zatwierdz [Q] - porzuæ");
 		boolean readChar = false;
 		do {
@@ -118,13 +127,12 @@ public class Program {
 
 			}
 		} while (!readChar);
-		
-		
+
 		PreparedStatement deleteEmployeeStatement = (PreparedStatement) conn
-				.prepareStatement(deleteSingleEmployeeQuery);		
+				.prepareStatement(deleteSingleEmployeeQuery);
 		deleteEmployeeStatement.setInt(1, employeeIdDelete);
-		deleteEmployeeStatement.execute();	
-		
+		deleteEmployeeStatement.execute();
+
 	}
 
 	private void insertEmployee() throws Exception {
@@ -164,7 +172,7 @@ public class Program {
 		String phone = GetInputFor("Phone");
 		String creditCard = GetInputFor("Credit card");
 		BigDecimal costLimit = GetDecimalFor("Cost limit");
-		
+
 		insertStatement.setString(1, firstName);
 		insertStatement.setString(2, lastName);
 		insertStatement.setBigDecimal(3, salary);
@@ -172,9 +180,10 @@ public class Program {
 		insertStatement.setString(5, phone);
 		insertStatement.setString(6, creditCard);
 		insertStatement.setBigDecimal(7, costLimit);
-		
+
 		insertStatement.executeUpdate();
 	}
+
 	private BigDecimal GetDecimalFor(String fieldName) throws Exception {
 
 		BigDecimal bigDecimal = new BigDecimal(0);
@@ -234,13 +243,16 @@ public class Program {
 		System.out.println("\t 1. Lista pracownikow");
 		System.out.println("\t 2. Dodaj pracownikow");
 		System.out.println("\t 3. Usun pracownikow");
-		System.out.println("\t 4. Kopia zapasowa");
+		System.out.println("\t 4. Wyœlij dane");
+		System.out.println("\t 5. Uruchom serwer");
+		System.out.println("\t 6. Zabij serwer");
+
 		System.out.println("\t 0. Wyjscie");
 
 		boolean repeat = false;
 		do {
 			String line = br.readLine();
-			if(line.trim().equals("")){
+			if (line.trim().equals("")) {
 				line = "\n";
 			}
 			int keyValue = line.charAt(0);
@@ -252,6 +264,9 @@ public class Program {
 			case 50:
 			case 51:
 			case 52:
+			case 53:
+			case 54:
+			case 55:
 				return keyValue - 48;
 			default:
 				repeat = true;
