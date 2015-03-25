@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import pl.co.soltysiak.ztpj.net.model.ApplicationSettings;
+import pl.co.soltysiak.ztpj.net.model.Employee;
 
 public class Client {
 	private String hostName;
@@ -18,7 +19,8 @@ public class Client {
 		this.portNumber = ApplicationSettings.getPort();
 	}
 
-	public void GetEmployeeData() throws IOException {
+	public Employee GetEmployeeData() throws IOException {
+		Employee returnedEmployee = null;
 		try (Socket clientSocket = new Socket(hostName, portNumber);
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
 						true);
@@ -28,17 +30,14 @@ public class Client {
 					System.in));
 			String fromServer;
 			String fromUser;
-
+			
+				
 			while ((fromServer = in.readLine()) != null) {
 				System.out.println("Server: " + fromServer);
 				if (fromServer.equals("Bye."))
 					break;
-
-				fromUser = stdIn.readLine();
-				if (fromUser != null) {
-					System.out.println("Client: " + fromUser);
-					out.println(fromUser);
-				}
+				
+				return Employee.parseEmployee(fromServer);
 			}
 		} catch (UnknownHostException e) {
 			System.err.println("Don't know about host " + hostName);
@@ -48,6 +47,6 @@ public class Client {
 					+ hostName);
 			System.exit(1);
 		}
-
+		return null;
 	}
 }

@@ -14,6 +14,7 @@ import java.text.ParseException;
 
 import pl.co.soltysiak.ztpj.net.connectivity.Client;
 import pl.co.soltysiak.ztpj.net.connectivity.Server;
+import pl.co.soltysiak.ztpj.net.model.ApplicationSettings;
 import pl.co.soltysiak.ztpj.net.model.Employee;
 
 public class Program {
@@ -35,7 +36,7 @@ public class Program {
 	private void start() throws Exception {
 		try {
 			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-			String url = "jdbc:sqlserver://LUNA\\SQLEXPRESS:1433;databaseName=Company;integratedSecurity=true;";
+			String url = ApplicationSettings.getConnectionString();
 			conn = DriverManager.getConnection(url, "sa", "password");
 			int menuChoice = 0;
 			do {
@@ -48,8 +49,20 @@ public class Program {
 					deleteEmployee();
 				} else if (menuChoice == 4) {
 					clientInstance = new Client("127.0.0.1");
-					clientInstance.GetEmployeeData();
+					Employee e = clientInstance.GetEmployeeData();
 					
+					PreparedStatement insertStatement = (PreparedStatement) conn
+							.prepareStatement(insertEmployeeQuery);
+					
+					insertStatement.setString(1, e.getFirstName());
+					insertStatement.setString(2, e.getLastName());
+					insertStatement.setBigDecimal(3, e.getSalary());
+					insertStatement.setString(4, e.getPosition());
+					insertStatement.setString(5, e.getPhone());
+					insertStatement.setString(6, e.getCreditCard());
+					insertStatement.setBigDecimal(7, e.getCostLimit());
+
+					insertStatement.executeUpdate();
 				} else if (menuChoice == 5) {
 					serverInstance = new Server();
 					serverInstance.startServer();
@@ -245,7 +258,6 @@ public class Program {
 		System.out.println("\t 3. Usun pracownikow");
 		System.out.println("\t 4. Wyœlij dane");
 		System.out.println("\t 5. Uruchom serwer");
-		System.out.println("\t 6. Zabij serwer");
 
 		System.out.println("\t 0. Wyjscie");
 
